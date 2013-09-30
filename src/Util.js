@@ -11,12 +11,12 @@
 // The here-listed methods are utility methods for the day-to-day
 // VIE.js usage. All methods are within the static namespace ```VIE.Util```.
 VIE.Util = {
+  urisWithoutAngleBrackets : true,
   isReference: function(uri){
-    var matcher = new RegExp("^\\<([^\\>]*)\\>$");
-    if (matcher.exec(uri)) {
-      return true;
-    }
-    return false;
+    if( VIE.Util.urisWithoutAngleBrackets )
+        return /^(https?|ftp):\/\/(((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?(((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?)(:\d*)?)(\/((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)?(\?((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[\uE000-\uF8FF]|\/|\?)*)?(\#((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?$/i.test(uri);
+    else
+        return /^\\<([^\\>]*)\\>$/.test(uri);
   },
 
   toReference: function(uri, ns) {
@@ -33,12 +33,18 @@ VIE.Util = {
       ret = uri;
     } else if (ns && ns.isCurie(uri)) {
       ret = ns.uri(uri);
-      if (ret === "<" + ns.base() + uri + ">") {
-        // no base namespace extension with IDs
-        ret = '<' + uri + '>';
-      }
+      if( !VIE.Util.urisWithoutAngleBrackets )
+          if (ret === "<" + ns.base() + uri + ">") {
+            // no base namespace extension with IDs
+            ret = '<' + uri + '>';
+          }
+      else
+           ret = uri;
     } else if (ns && !ns.isUri(uri)) {
-      ret = '<' + uri + '>';
+      if( !VIE.Util.urisWithoutAngleBrackets )
+        ret = '<' + uri + '>';
+      else
+        ret = uri;
     }
     return ret;
   },
@@ -158,12 +164,18 @@ VIE.Util = {
         for (var prefix in namespaces.toObj()) {
             if (prefix !== "" && (curie.indexOf(prefix + ":") === 0 || curie.indexOf("[" + prefix + ":") === 0)) {
                 var pattern = new RegExp("^" + "\\[{0,1}" + prefix + delim);
-                return "<" + curie.replace(pattern, namespaces.get(prefix)).replace(/\]{0,1}$/, '') + ">";
+                if( VIE.Util.urisWithoutAngleBrackets )
+                    return curie.replace(pattern, namespaces.get(prefix)).replace(/\]{0,1}$/, '');
+                else
+                    return "<" + curie.replace(pattern, namespaces.get(prefix)).replace(/\]{0,1}$/, '') + ">";
             }
         }
         /* check for the default namespace */
         if (curie.indexOf(delim) === -1) {
-            return "<" + namespaces.base() + curie + ">";
+            if( VIE.Util.urisWithoutAngleBrackets )
+                return namespaces.base() + curie;
+            else
+                return "<" + namespaces.base() + curie + ">";
         }
         throw new Error("No prefix found for CURIE '" + curie + "'!");
     },
@@ -183,7 +195,10 @@ VIE.Util = {
 //     VIE.Util.isUri(uri);   // --> true
 //     VIE.Util.isUri(curie); // --> false
     isUri : function (something) {
-        return (typeof something === "string" && something.search(/^<.+>$/) === 0);
+        if( VIE.Util.urisWithoutAngleBrackets )
+            return VIE.Util.isReference(something);
+        else
+            return (typeof something === "string" && something.search(/^<.+>$/) === 0);
     },
 
 // ### VIE.Util.mapAttributeNS(attr, ns)
@@ -208,9 +223,15 @@ VIE.Util = {
             a = ns.uri(attr);
         } else if (!ns.isUri(attr)) {
             if (attr.indexOf(":") === -1) {
-                a = '<' + ns.base() + attr + '>';
+                if( VIE.Util.urisWithoutAngleBrackets )
+                    a = ns.base() + attr;
+                else
+                    a = '<' + ns.base() + attr + '>';
             } else {
-                a = '<' + attr + '>';
+                if( VIE.Util.urisWithoutAngleBrackets )
+                    a = attr;
+                else
+                    a = '<' + attr + '>';
             }
         }
         return a;
@@ -964,3 +985,4 @@ VIE.Util = {
         return additionalRules;
     }
 };
+
