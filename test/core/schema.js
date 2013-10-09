@@ -31,7 +31,7 @@ test("Initialization", function() {
             ok (z.types.get("Organization").subsumes("Corporation"));
             ok (z.types.get("BowlingAlley").isof("Thing"));
             
-            ok (z.types.get("Person").id.indexOf("<http://schema.org/") === 0);
+            ok (z.types.get("Person").id.indexOf((VIE.Util.urisWithoutAngleBrackets ? "" : "<") + "http://schema.org/") === 0);
             
             
             var hospital = z.types.get("Hospital");

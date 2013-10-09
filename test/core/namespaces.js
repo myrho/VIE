@@ -163,7 +163,7 @@ test ("CURIE <-> URI", function () {
     var v = new VIE();
     v.namespaces.add("test", "http://this.is.a/test#");
     
-    var uri = "<http://this.is.a/test#foo>";
+    var uri = VIE.Util.addAngleBrackets("http://this.is.a/test#foo");
     var curie = "test:foo";
     var scurie = "[test:foo]";
 
@@ -193,8 +193,8 @@ test('Double prefixed CURIE <-> URI', function () {
     var curie = 'typo3:TYPO3.TYPO3:Text';
     var curie2 = 'typo3:TYPO3.TYPO3.FOO3:Text';
 
-    var uri = '<http://www.typo3.org/ns/2011/Flow3/Packages/TYPO3/Content/TYPO3.TYPO3:Text>';
-    var uri2 = '<http://www.typo3.org/ns/2011/Flow3/Packages/TYPO3/Content/TYPO3.TYPO3.FOO3:Text>';
+    var uri = VIE.Util.addAngleBrackets('http://www.typo3.org/ns/2011/Flow3/Packages/TYPO3/Content/TYPO3.TYPO3:Text');
+    var uri2 = VIE.Util.addAngleBrackets('http://www.typo3.org/ns/2011/Flow3/Packages/TYPO3/Content/TYPO3.TYPO3.FOO3:Text');
 
     // URI -> CURIE
     equal(v.namespaces.curie(uri), curie);
@@ -237,6 +237,6 @@ test('Sub-namespaces', function () {
     v.namespaces.addOrReplace('cw', 'http://schema.org/CreativeWork');
 
     // Resolve to URI
-    equal(v.namespaces.uri('sc:WebPage'), '<http://schema.org/WebPage>');
-    equal(v.namespaces.uri('cw:audience'), '<http://schema.org/CreativeWorkaudience>');
+    equal(v.namespaces.uri('sc:WebPage'), VIE.Util.addAngleBrackets('http://schema.org/WebPage'));
+    equal(v.namespaces.uri('cw:audience'), VIE.Util.addAngleBrackets('http://schema.org/CreativeWorkaudience'));
 });

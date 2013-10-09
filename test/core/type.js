@@ -93,10 +93,10 @@ test("VIE - Creation/Extension/Removal of types", function() {
     ok (thingy.hierarchy());
     equal (typeof thingy.hierarchy(), 'object');
     var refHierarchy = {
-        id : '<' + v.namespaces.base() + "TestThingy" + '>',
+        id : VIE.Util.addAngleBrackets(v.namespaces.base() + "TestThingy"),
         subtypes: [
             {
-                id : '<' + v.namespaces.base() + "TestPersony" + '>',
+                id : VIE.Util.addAngleBrackets(v.namespaces.base() + "TestPersony"),
                 subtypes: []
             }
         ]
@@ -313,7 +313,7 @@ test("VIE - Type based validation", function () {
     // Make the model valid again by setting the required fields
     entity.set({
       'title': 'Hello, world',
-      'author': '<foo>'
+      'author': VIE.Util.addAngleBrackets('foo')
     });
     equal(entity.validate(entity.attributes), undefined);
 

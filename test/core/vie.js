@@ -1,5 +1,22 @@
 module("Core");
 
+test("vie.js Util", function() {
+    var uriWithBrackets = "<http://example.net/foo>";
+    var uriWithoutBrackets = uriWithBrackets.substring(1, uriWithBrackets.length-1);
+    var result = VIE.Util.removeAngleBrackets(uriWithBrackets);
+    equal(result, uriWithoutBrackets);
+
+    result = VIE.Util.addAngleBrackets(uriWithoutBrackets);
+    if( VIE.Util.urisWithoutAngleBrackets ) {
+        equal(result, uriWithoutBrackets );
+    } else {
+        equal(result, uriWithBrackets );
+    }
+
+    result = VIE.Util.addAngleBrackets(uriWithBrackets);
+    equal(result, uriWithBrackets );
+});
+
 test("vie.js API", function () {
 
 	equal(typeof VIE, 'function', "Test if global VIE object is available! Please ensure that you build the project first by running 'ant'.");
@@ -81,22 +98,22 @@ test("vie.js Entities API -  id/getSubject()", function () {
     var e = new z.Entity({"@subject" : "owl:TestId"});
     ok(e);
     equal(e.id, e.getSubject());
-    equal(e.id, "<http://www.w3.org/2002/07/owl#TestId>");
+    equal(e.id, VIE.Util.addAngleBrackets("http://www.w3.org/2002/07/owl#TestId"));
 
     var e = new z.Entity({"@subject" : "<http://www.w3.org/2002/07/owl#TestId>"});
     ok(e);
     equal(e.id, e.getSubject());
-    equal(e.id, "<http://www.w3.org/2002/07/owl#TestId>");
+    equal(e.id, VIE.Util.addAngleBrackets("http://www.w3.org/2002/07/owl#TestId"));
     
     var e = new z.Entity({"@subject" : "<TestId>"});
     ok(e);
     equal(e.id, e.getSubject());
-    equal(e.id, "<TestId>");
+    equal(e.id, VIE.Util.addAngleBrackets("TestId"));
     
     var e = new z.Entity({"@subject" : "TestId"});
     ok(e);
     equal(e.id, e.getSubject());
-    equal(e.id, "<TestId>");
+    equal(e.id, VIE.Util.addAngleBrackets("TestId"));
     
 });
 
@@ -562,7 +579,7 @@ test("vie.js Generate Typed Entity Classes", function () {
     ok(Person.isEntity);
     ok(Person instanceof TypedEntityClass);
     ok(Person.isof("Person"));
-    equal(Person.get("@type").id, "<" + v.namespaces.base() + "Person" + ">");
+    equal(Person.get("@type").id, VIE.Util.addAngleBrackets(v.namespaces.base() + "Person"));
     ok(Person instanceof Backbone.Model);
 
     var SecondPerson = new TypedEntityClass({"name": "Henri"});

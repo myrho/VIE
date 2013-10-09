@@ -57,7 +57,8 @@ VIE.prototype.Attribute = function (id, range, domain, minCount, maxCount, metad
 //     var knowsAttr = new vie.Attribute("knows", ["Person"], "Person");
 //     console.log(knowsAttr.id);
 //     // --> <http://viejs.org/ns/knows>
-    this.id = this.vie.namespaces.isUri(id) ? id : this.vie.namespaces.uri(id);
+    this.id = this.vie.namespaces.isUri(id) ? VIE.Util.normalizeAngleBrackets(id) 
+                                            : this.vie.namespaces.uri(id);
 
 // ### range
 // This field stores the ranges of the attribute's instance.
@@ -266,7 +267,8 @@ VIE.prototype.Attributes = function (domain, attrs) {
 //     personAttrs.get("knows");
     this.get = function (id) {
         if (typeof id === 'string') {
-            var lid = this.vie.namespaces.isUri(id) ? id : this.vie.namespaces.uri(id);
+            var lid = this.vie.namespaces.isUri(id) ? VIE.Util.normalizeAngleBrackets(id) 
+                                                    : this.vie.namespaces.uri(id);
             return this._inherit()._attributes[lid];
         } else if (id instanceof this.vie.Attribute) {
             return this.get(id.id);

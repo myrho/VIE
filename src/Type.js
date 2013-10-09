@@ -43,7 +43,8 @@ VIE.prototype.Type = function (id, attrs, metadata) {
 //
 //     console.log(person.id);
 //      // --> "<http://viejs.org/ns/Person>"
-    this.id = this.vie.namespaces.isUri(id) ? id : this.vie.namespaces.uri(id);
+    this.id = this.vie.namespaces.isUri(id) ? VIE.Util.normalizeAngleBrackets(id) 
+                                            : this.vie.namespaces.uri(id);
 
     /* checks whether such a type is already defined. */
     if (this.vie.types.get(this.id)) {
@@ -351,7 +352,8 @@ VIE.prototype.Types = function () {
             return undefined;
         }
         if (typeof id === 'string') {
-            var lid = this.vie.namespaces.isUri(id) ? id : this.vie.namespaces.uri(id);
+            var lid = this.vie.namespaces.isUri(id) ? VIE.Util.normalizeAngleBrackets(id) 
+                                                    : this.vie.namespaces.uri(id);
             return this._types[lid];
         } else if (id instanceof this.vie.Type) {
             return this.get(id.id);
