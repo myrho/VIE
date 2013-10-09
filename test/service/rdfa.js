@@ -12,7 +12,7 @@ test("Test simple RDFa parsing", function() {
         equal(entities.length, 2);
         var albert = z.entities.get('<http://dbpedia.org/resource/Albert_Einstein>');
         var germany = z.entities.get('<http://dbpedia.org/resource/Germany>');
-        equal(albert.id, '<http://dbpedia.org/resource/Albert_Einstein>');
+        equal(albert.id, VIE.Util.addAngleBrackets('http://dbpedia.org/resource/Albert_Einstein'));
         equal(albert.get('foaf:name'), 'Albert Einstein');
         equal(germany.get('dbp:conventionalLongName'), 'Federal Republic of Germany');
 
@@ -115,7 +115,7 @@ test("Test RDFa image entitization", function() {
             start();
             return;
         }
-        equal(icons.at(0).id, '<http://example.net/image.jpg>');
+        equal(icons.at(0).id, VIE.Util.addAngleBrackets('http://example.net/image.jpg'));
         
         equal(jQuery('img', html).length, 1);
         
@@ -147,7 +147,7 @@ test("Test collection reset with RDFa", function() {
         var collection = entity.get('collection');
         ok(collection.isCollection);
         equal(collection.length, 1);
-        equal(collection.at(0).get('@type')[1].id, '<http://rdfs.org/sioc/ns#Post>');
+        equal(collection.at(0).get('@type')[1].id, VIE.Util.addAngleBrackets('http://rdfs.org/sioc/ns#Post'));
         equal(jQuery('li[about]', html).length, 1);
 
         entity.set({

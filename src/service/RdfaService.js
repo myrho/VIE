@@ -42,29 +42,31 @@ VIE.prototype.RdfaService = function(options) {
     this.views = [];
     this.templates = {};
 
-    this.datatypeReaders = {
-      '<http://www.w3.org/2001/XMLSchema#boolean>': function (value) {
+    this.datatypeReaders = {};
+    this.datatypeReaders[VIE.Util.addAngleBrackets('http://www.w3.org/2001/XMLSchema#boolean')] =
+      function (value) {
         if (value === 'true' || value === 1 || value === true) {
           return true;
         }
         return false;
-      },
-      '<http://www.w3.org/2001/XMLSchema#dateTime>': function (value) {
+      };
+    this.datatypeReaders[VIE.Util.addAngleBrackets('http://www.w3.org/2001/XMLSchema#dateTime')] =
+      function (value) {
         return new Date(value);
-      },
-      '<http://www.w3.org/2001/XMLSchema#integer>': function (value) {
+      };
+    this.datatypeReaders[VIE.Util.addAngleBrackets('http://www.w3.org/2001/XMLSchema#integer')] = 
+      function (value) {
         return parseInt(value, 10);
-      }
-    };
+      };
 
-    this.datatypeWriters = {
-      '<http://www.w3.org/2001/XMLSchema#dateTime>': function (value) {
+    this.datatypeWriters = {};
+    this.datatypeWriters[VIE.Util.addAngleBrackets('http://www.w3.org/2001/XMLSchema#dateTime')] = 
+      function (value) {
         if (!_.isDate(value)) {
           return value;
         }
         return value.toISOString();
-      }
-    };
+      };
 
     this.vie = null; /* will be set via VIE.use(); */
     /* overwrite options.name if you want to set another name */
@@ -371,13 +373,13 @@ VIE.prototype.RdfaService.prototype = {
         }
         var templateFunc = self.getElementTemplate(templateElement);
         templates[childType] = templateFunc;
-        templates['<http://www.w3.org/2002/07/owl#Thing>'] = templateFunc;
+        templates[VIE.Util.addAngleBrackets('http://www.w3.org/2002/07/owl#Thing')] = templateFunc;
       });
 
       if (_.isEmpty(templates)) {
         var defaultTemplate = element.children(':first-child');
         if (defaultTemplate.length) {
-          templates['<http://www.w3.org/2002/07/owl#Thing>'] = self.getElementTemplate(defaultTemplate);
+          templates[VIE.Util.addAngleBrackets('http://www.w3.org/2002/07/owl#Thing')] = self.getElementTemplate(defaultTemplate);
         }
       }
 
@@ -432,7 +434,7 @@ VIE.prototype.RdfaService.prototype = {
         if (jQuery(element).attr('typeof') !== this.options.attributeExistenceComparator) {
             type = jQuery(element).attr('typeof');
             if (type && type.indexOf("://") !== -1) {
-                return "<" + type + ">";
+                return VIE.Util.addAngleBrackets(type);
             } else {
                 return type;
             }
@@ -494,10 +496,7 @@ VIE.prototype.RdfaService.prototype = {
         if (subject.indexOf('_:') === 0) {
             return subject;
         }
-        if (subject.indexOf('<') === 0) {
-            return subject;
-        }
-        return "<" + subject + ">";
+        return VIE.Util.addAngleBrackets( subject );
     },
 
     setElementSubject : function(subject, element) {
@@ -631,13 +630,13 @@ VIE.prototype.RdfaService.prototype = {
         // RDF resource.
         var resource = element.attr('resource');
         if (resource) {
-            return ["<" + resource + ">"];
+            return [VIE.Util.addAngleBrackets(resource)];
         }
 
         // `href` attribute also links to another RDF resource.
         var href = element.attr('href');
         if (href && element.attr('rel') === predicate) {
-            return ["<" + href + ">"];
+            return [VIE.Util.addAngleBrackets(href)];
         }
 
         // If the predicate is a relation, we look for identified child objects

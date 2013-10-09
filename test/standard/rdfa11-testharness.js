@@ -14,7 +14,7 @@ test("Test #1 (required): Predicate establishment with @property", function() {
     z.load({element: html}).from('rdfa').execute().done(function(entities) {
         ok(entities);
         equal(entities.length, 1);
-        equal(entities[0].id, '<photo1.jpg>');
+        equal(entities[0].id, VIE.Util.addAngleBrackets('photo1.jpg'));
         equal(entities[0].get('dc:creator'), 'Mark Birbeck');
         start();
     });
@@ -37,11 +37,11 @@ test("Test #6 (required): @rel and @rev", function() {
         ok(entities);
         equal(entities.length, 2);
 
-        equal(entities[0].id, '<photo1.jpg>');
-        equal(entities[0].get('dc:creator'), '<http://www.blogger.com/profile/1109404>');
+        equal(entities[0].id, VIE.Util.addAngleBrackets('photo1.jpg'));
+        equal(entities[0].get('dc:creator'), VIE.Util.addAngleBrackets('http://www.blogger.com/profile/1109404'));
 
-        equal(entities[1].id, '<http://www.blogger.com/profile/1109404>');
-        equal(entities[1].get('foaf:img'), '<photo1.jpg>');
+        equal(entities[1].id, VIE.Util.addAngleBrackets('http://www.blogger.com/profile/1109404'));
+        equal(entities[1].get('foaf:img'), VIE.Util.addAngleBrackets('photo1.jpg'));
         start();
     });
 });
@@ -63,12 +63,12 @@ test("Test #7 (required): @rel, @rev, @property, @content", function() {
         ok(entities);
         equal(entities.length, 2);
 
-        equal(entities[0].id, '<photo1.jpg>');
-        equal(entities[0].get('dc:creator'), '<http://www.blogger.com/profile/1109404>');
+        equal(entities[0].id, VIE.Util.addAngleBrackets('photo1.jpg'));
+        equal(entities[0].get('dc:creator'), VIE.Util.addAngleBrackets('http://www.blogger.com/profile/1109404'));
         equal(entities[0].get('dc:title'), 'Portrait of Mark'); 
 
-        equal(entities[1].id, '<http://www.blogger.com/profile/1109404>');
-        equal(entities[1].get('foaf:img'), '<photo1.jpg>');
+        equal(entities[1].id, VIE.Util.addAngleBrackets('http://www.blogger.com/profile/1109404'));
+        equal(entities[1].get('foaf:img'), VIE.Util.addAngleBrackets('photo1.jpg'));
         start();
     });
 });
@@ -90,8 +90,8 @@ test("Test #9 (required): @rev", function() {
         ok(entities);
         equal(entities.length, 1);
 
-        equal(entities[0].id, '<http://example.org/people#Person2>');
-        equal(entities[0].get('foaf:knows'), '<http://example.org/people#Person1>');
+        equal(entities[0].id, VIE.Util.addAngleBrackets('http://example.org/people#Person2'));
+        equal(entities[0].get('foaf:knows'), VIE.Util.addAngleBrackets('http://example.org/people#Person1'));
         start();
     });
 });
@@ -113,11 +113,11 @@ test("Test #10 (required): @rel, @rev, @href", function() {
         ok(entities);
         equal(entities.length, 2);
 
-        equal(entities[0].id, '<http://example.org/people#Person1>');
-        equal(entities[0].get('foaf:knows'), '<http://example.org/people#Person2>');
+        equal(entities[0].id, VIE.Util.addAngleBrackets('http://example.org/people#Person1'));
+        equal(entities[0].get('foaf:knows'), VIE.Util.addAngleBrackets('http://example.org/people#Person2'));
 
-        equal(entities[1].id, '<http://example.org/people#Person2>');
-        equal(entities[1].get('foaf:knows'), '<http://example.org/people#Person1>');
+        equal(entities[1].id, VIE.Util.addAngleBrackets('http://example.org/people#Person2'));
+        equal(entities[1].get('foaf:knows'), VIE.Util.addAngleBrackets('http://example.org/people#Person1'));
 
         start();
     });

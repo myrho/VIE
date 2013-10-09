@@ -560,7 +560,7 @@ VIE.prototype.StanbolConnector.prototype = {
         var connector = this;
         options = (options)? options :  {};
 
-        options.uri = uri.replace(/^</, '').replace(/>$/, '');
+        options.uri = VIE.Util.removeAngleBrackets(uri);
 
         connector._iterate({
             method : connector._load,
@@ -743,7 +743,7 @@ VIE.prototype.StanbolConnector.prototype = {
         /*/lookup/?id=http://dbpedia.org/resource/Paris&create=false"*/
         var connector = this;
 
-        uri = uri.replace(/^</, '').replace(/>$/, '');
+        uri = VIE.Util.removeAngleBrackets(uri);
 
         options.uri = uri;
         options.create = (options.create)? options.create : false;
