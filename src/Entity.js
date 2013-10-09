@@ -323,7 +323,7 @@ VIE.prototype.Entity = Backbone.Model.extend({
     if (this.markedChanged) {
       return true;
     }
-
+    attr = VIE.Util.mapAttributeNS(attr, this.vie.namespaces);
     return Backbone.Model.prototype.hasChanged.call(this, attr);
   },
 

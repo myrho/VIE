@@ -18,6 +18,6 @@ test('toJSONLD export to JSON', function() {
     var exportedJson = JSON.stringify(model.toJSONLD());
     var parsedJson = JSON.parse(exportedJson);
 
-    equal(parsedJson['@subject'], '<http://example.net/Madonna>');
-    deepEqual(parsedJson['@type'], ['<http://xmlns.com/foaf/0.1/Person>', '<http://example.net/foo/Musician>']);
+    equal(parsedJson['@subject'], VIE.Util.addAngleBrackets('http://example.net/Madonna'));
+    deepEqual(parsedJson['@type'], [VIE.Util.addAngleBrackets('http://xmlns.com/foaf/0.1/Person'), VIE.Util.addAngleBrackets('http://example.net/foo/Musician')]);
 });
