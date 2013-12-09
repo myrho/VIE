@@ -650,43 +650,55 @@ VIE.prototype.Findable.prototype = new VIE.prototype.Able();
 // The here-listed methods are utility methods for the day-to-day
 // VIE.js usage. All methods are within the static namespace ```VIE.Util```.
 VIE.Util = {
+  urisWithoutAngleBrackets : true,
+  uriPattern : /^(https?|ftp):\/\/(((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?(((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?)(:\d*)?)(\/((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)?(\?((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[\uE000-\uF8FF]|\/|\?)*)?(\#((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?$/i,
+  hasAngleBrackets: function(string) {
+    return /^<(.*)>$/.test(string);
+  },
+  removeAngleBrackets: function(string) {
+    if( VIE.Util.hasAngleBrackets(string) )
+      return string.substring(1, string.length-1);
+    return string;
+  },
+  addAngleBrackets: function(string) {
+    if( VIE.Util.urisWithoutAngleBrackets || VIE.Util.hasAngleBrackets(string) ) 
+      return string;
+    return "<" + string + ">";
+  },
+  normalizeAngleBrackets: function(string) {
+    return VIE.Util.addAngleBrackets(VIE.Util.removeAngleBrackets(string));
+  },
   isReference: function(uri){
-    var matcher = new RegExp("^\\<([^\\>]*)\\>$");
-    if (matcher.exec(uri)) {
-      return true;
-    }
-    return false;
+    return VIE.Util.uriPattern.test(VIE.Util.removeAngleBrackets(uri));
   },
 
   toReference: function(uri, ns) {
     if (_.isArray(uri)) {
       return _.map(uri, function(part) {
-       return this.toReference(part);
+       return VIE.Util.toReference(part);
       }, this);
     }
-    if (!_.isString(uri)) {
+    if (!_.isString(uri)) 
       return uri;
-    }
+
+    if (uri.substring(0, 2) === "_:") 
+      return uri;
+
     var ret = uri;
-    if (uri.substring(0, 2) === "_:") {
-      ret = uri;
-    } else if (ns && ns.isCurie(uri)) {
+    if (ns && ns.isCurie(uri)) {
       ret = ns.uri(uri);
-      if (ret === "<" + ns.base() + uri + ">") {
-        // no base namespace extension with IDs
-        ret = '<' + uri + '>';
+      if (ret === VIE.Util.addAngleBrackets(ns.base() + uri ) ) {
+        ret = uri;
       }
-    } else if (ns && !ns.isUri(uri)) {
-      ret = '<' + uri + '>';
-    }
-    return ret;
+    } 
+    return VIE.Util.normalizeAngleBrackets(ret);
   },
 
   fromReference: function(uri, ns) {
-    if (ns && !ns.isUri(uri)) {
+    if( ns && !ns.isUri(uri)) {
       return uri;
     }
-    return uri.substring(1, uri.length - 1);
+    return VIE.Util.removeAngleBrackets(uri);
   },
 
 // ### VIE.Util.toCurie(uri, safe, namespaces)
@@ -716,14 +728,15 @@ VIE.Util = {
             return uri;
         }
         var delim = ":";
+        var u = VIE.Util.removeAngleBrackets(uri);
         for (var k in namespaces.toObj()) {
-            if (uri.indexOf(namespaces.get(k)) === 1) {
-                var pattern = new RegExp("^" + "<?" + namespaces.get(k));
+            if (u.indexOf(namespaces.get(k)) === 0) {
+                var pattern = new RegExp("^" + namespaces.get(k));
                 if (k === '') {
                     delim = '';
                 }
                 return ((safe)? "[" : "") +
-                        uri.replace(pattern, k + delim).replace(/>$/, '') +
+                        u.replace(pattern, k + delim) +
                         ((safe)? "]" : "");
             }
         }
@@ -797,12 +810,14 @@ VIE.Util = {
         for (var prefix in namespaces.toObj()) {
             if (prefix !== "" && (curie.indexOf(prefix + ":") === 0 || curie.indexOf("[" + prefix + ":") === 0)) {
                 var pattern = new RegExp("^" + "\\[{0,1}" + prefix + delim);
-                return "<" + curie.replace(pattern, namespaces.get(prefix)).replace(/\]{0,1}$/, '') + ">";
+                return VIE.Util.addAngleBrackets(
+                  curie.replace(pattern, namespaces.get(prefix)).replace(/\]{0,1}$/, '')
+                );
             }
         }
         /* check for the default namespace */
         if (curie.indexOf(delim) === -1) {
-            return "<" + namespaces.base() + curie + ">";
+            return VIE.Util.addAngleBrackets(namespaces.base() + curie);
         }
         throw new Error("No prefix found for CURIE '" + curie + "'!");
     },
@@ -822,7 +837,8 @@ VIE.Util = {
 //     VIE.Util.isUri(uri);   // --> true
 //     VIE.Util.isUri(curie); // --> false
     isUri : function (something) {
-        return (typeof something === "string" && something.search(/^<.+>$/) === 0);
+      return (typeof something === "string") &&
+        VIE.Util.uriPattern.test(VIE.Util.removeAngleBrackets(something));
     },
 
 // ### VIE.Util.mapAttributeNS(attr, ns)
@@ -840,19 +856,18 @@ VIE.Util = {
 //      var ns = myVIE.namespaces;
 //      VIE.Util.mapAttributeNS(attr, ns); // '<' + ns.base() + attr + '>';
     mapAttributeNS : function (attr, ns) {
-        var a = attr;
-        if (ns.isUri (attr) || attr.indexOf('@') === 0) {
-            //ignore
-        } else if (ns.isCurie(attr)) {
-            a = ns.uri(attr);
-        } else if (!ns.isUri(attr)) {
-            if (attr.indexOf(":") === -1) {
-                a = '<' + ns.base() + attr + '>';
-            } else {
-                a = '<' + attr + '>';
-            }
+        if ( !attr || attr === undefined ) return attr;
+        if ( attr.indexOf('@') === 0)
+          return attr;
+
+        if (ns.isUri (attr)) 
+          return VIE.Util.normalizeAngleBrackets(attr);
+
+        try {
+          return ns.uri(attr);
+        } catch(e) {
+          return VIE.Util.normalizeAngleBrackets(attr);
         }
-        return a;
     },
 
 // ### VIE.Util.rdf2Entities(service, results)
@@ -1604,6 +1619,7 @@ VIE.Util = {
     }
 };
 
+
 //     VIE - Vienna IKS Editables
 //     (c) 2011 Henri Bergius, IKS Consortium
 //     (c) 2011 Sebastian Germesin, IKS Consortium
@@ -1929,7 +1945,7 @@ VIE.prototype.Entity = Backbone.Model.extend({
     if (this.markedChanged) {
       return true;
     }
-
+    attr = VIE.Util.mapAttributeNS(attr, this.vie.namespaces);
     return Backbone.Model.prototype.hasChanged.call(this, attr);
   },
 
@@ -2334,7 +2350,8 @@ VIE.prototype.Type = function (id, attrs, metadata) {
 //
 //     console.log(person.id);
 //      // --> "<http://viejs.org/ns/Person>"
-    this.id = this.vie.namespaces.isUri(id) ? id : this.vie.namespaces.uri(id);
+    this.id = this.vie.namespaces.isUri(id) ? VIE.Util.normalizeAngleBrackets(id) 
+                                            : this.vie.namespaces.uri(id);
 
     /* checks whether such a type is already defined. */
     if (this.vie.types.get(this.id)) {
@@ -2642,7 +2659,8 @@ VIE.prototype.Types = function () {
             return undefined;
         }
         if (typeof id === 'string') {
-            var lid = this.vie.namespaces.isUri(id) ? id : this.vie.namespaces.uri(id);
+            var lid = this.vie.namespaces.isUri(id) ? VIE.Util.normalizeAngleBrackets(id) 
+                                                    : this.vie.namespaces.uri(id);
             return this._types[lid];
         } else if (id instanceof this.vie.Type) {
             return this.get(id.id);
@@ -2828,7 +2846,8 @@ VIE.prototype.Attribute = function (id, range, domain, minCount, maxCount, metad
 //     var knowsAttr = new vie.Attribute("knows", ["Person"], "Person");
 //     console.log(knowsAttr.id);
 //     // --> <http://viejs.org/ns/knows>
-    this.id = this.vie.namespaces.isUri(id) ? id : this.vie.namespaces.uri(id);
+    this.id = this.vie.namespaces.isUri(id) ? VIE.Util.normalizeAngleBrackets(id) 
+                                            : this.vie.namespaces.uri(id);
 
 // ### range
 // This field stores the ranges of the attribute's instance.
@@ -3037,7 +3056,8 @@ VIE.prototype.Attributes = function (domain, attrs) {
 //     personAttrs.get("knows");
     this.get = function (id) {
         if (typeof id === 'string') {
-            var lid = this.vie.namespaces.isUri(id) ? id : this.vie.namespaces.uri(id);
+            var lid = this.vie.namespaces.isUri(id) ? VIE.Util.normalizeAngleBrackets(id) 
+                                                    : this.vie.namespaces.uri(id);
             return this._inherit()._attributes[lid];
         } else if (id instanceof this.vie.Attribute) {
             return this.get(id.id);
@@ -4400,29 +4420,31 @@ VIE.prototype.RdfaService = function(options) {
     this.views = [];
     this.templates = {};
 
-    this.datatypeReaders = {
-      '<http://www.w3.org/2001/XMLSchema#boolean>': function (value) {
+    this.datatypeReaders = {};
+    this.datatypeReaders[VIE.Util.addAngleBrackets('http://www.w3.org/2001/XMLSchema#boolean')] =
+      function (value) {
         if (value === 'true' || value === 1 || value === true) {
           return true;
         }
         return false;
-      },
-      '<http://www.w3.org/2001/XMLSchema#dateTime>': function (value) {
+      };
+    this.datatypeReaders[VIE.Util.addAngleBrackets('http://www.w3.org/2001/XMLSchema#dateTime')] =
+      function (value) {
         return new Date(value);
-      },
-      '<http://www.w3.org/2001/XMLSchema#integer>': function (value) {
+      };
+    this.datatypeReaders[VIE.Util.addAngleBrackets('http://www.w3.org/2001/XMLSchema#integer')] = 
+      function (value) {
         return parseInt(value, 10);
-      }
-    };
+      };
 
-    this.datatypeWriters = {
-      '<http://www.w3.org/2001/XMLSchema#dateTime>': function (value) {
+    this.datatypeWriters = {};
+    this.datatypeWriters[VIE.Util.addAngleBrackets('http://www.w3.org/2001/XMLSchema#dateTime')] = 
+      function (value) {
         if (!_.isDate(value)) {
           return value;
         }
         return value.toISOString();
-      }
-    };
+      };
 
     this.vie = null; /* will be set via VIE.use(); */
     /* overwrite options.name if you want to set another name */
@@ -4729,13 +4751,13 @@ VIE.prototype.RdfaService.prototype = {
         }
         var templateFunc = self.getElementTemplate(templateElement);
         templates[childType] = templateFunc;
-        templates['<http://www.w3.org/2002/07/owl#Thing>'] = templateFunc;
+        templates[VIE.Util.addAngleBrackets('http://www.w3.org/2002/07/owl#Thing')] = templateFunc;
       });
 
       if (_.isEmpty(templates)) {
         var defaultTemplate = element.children(':first-child');
         if (defaultTemplate.length) {
-          templates['<http://www.w3.org/2002/07/owl#Thing>'] = self.getElementTemplate(defaultTemplate);
+          templates[VIE.Util.addAngleBrackets('http://www.w3.org/2002/07/owl#Thing')] = self.getElementTemplate(defaultTemplate);
         }
       }
 
@@ -4790,7 +4812,7 @@ VIE.prototype.RdfaService.prototype = {
         if (jQuery(element).attr('typeof') !== this.options.attributeExistenceComparator) {
             type = jQuery(element).attr('typeof');
             if (type && type.indexOf("://") !== -1) {
-                return "<" + type + ">";
+                return VIE.Util.addAngleBrackets(type);
             } else {
                 return type;
             }
@@ -4852,10 +4874,7 @@ VIE.prototype.RdfaService.prototype = {
         if (subject.indexOf('_:') === 0) {
             return subject;
         }
-        if (subject.indexOf('<') === 0) {
-            return subject;
-        }
-        return "<" + subject + ">";
+        return VIE.Util.addAngleBrackets( subject );
     },
 
     setElementSubject : function(subject, element) {
@@ -4989,13 +5008,13 @@ VIE.prototype.RdfaService.prototype = {
         // RDF resource.
         var resource = element.attr('resource');
         if (resource) {
-            return ["<" + resource + ">"];
+            return [VIE.Util.addAngleBrackets(resource)];
         }
 
         // `href` attribute also links to another RDF resource.
         var href = element.attr('href');
         if (href && element.attr('rel') === predicate) {
-            return ["<" + href + ">"];
+            return [VIE.Util.addAngleBrackets(href)];
         }
 
         // If the predicate is a relation, we look for identified child objects
@@ -5643,7 +5662,7 @@ VIE.prototype.StanbolConnector.prototype = {
         var connector = this;
         options = (options)? options :  {};
 
-        options.uri = uri.replace(/^</, '').replace(/>$/, '');
+        options.uri = VIE.Util.removeAngleBrackets(uri);
 
         connector._iterate({
             method : connector._load,
@@ -5826,7 +5845,7 @@ VIE.prototype.StanbolConnector.prototype = {
         /*/lookup/?id=http://dbpedia.org/resource/Paris&create=false"*/
         var connector = this;
 
-        uri = uri.replace(/^</, '').replace(/>$/, '');
+        uri = VIE.Util.removeAngleBrackets(uri);
 
         options.uri = uri;
         options.create = (options.create)? options.create : false;
