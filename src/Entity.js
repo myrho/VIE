@@ -51,14 +51,9 @@ VIE.prototype.Entity = Backbone.Model.extend({
     return VIE.Util.getFormSchema(this);
   },
 
-  // ### Getter, Has, Setter
-  // #### `.get(attr)`
-  // To be able to communicate to a VIE Entity you can use a simple get(property)
-  // command as in `entity.get('rdfs:label')` which will give you one or more literals.
-  // If the property points to a collection, its entities can be browsed further.
-  get: function (attr) {
+  _previousOrGet: function(attr, previousOrGet){
     attr = VIE.Util.mapAttributeNS(attr, this.vie.namespaces);
-    var value = Backbone.Model.prototype.get.call(this, attr);
+    var value = Backbone.Model.prototype[previousOrGet].call(this, attr);
 
     value = (_.isArray(value)) ? value : [ value ];
     if (value.length === 0) {
@@ -88,6 +83,19 @@ VIE.prototype.Entity = Backbone.Model.extend({
     // if there is only one element, just return that one
     value = (value.length === 1)? value[0] : value;
     return value;
+  },
+
+  previous: function(attr) {
+      return this._previousOrGet(attr, 'previous');
+  },
+
+  // ### Getter, Has, Setter
+  // #### `.get(attr)`
+  // To be able to communicate to a VIE Entity you can use a simple get(property)
+  // command as in `entity.get('rdfs:label')` which will give you one or more literals.
+  // If the property points to a collection, its entities can be browsed further.
+  get: function (attr) {
+      return this._previousOrGet(attr, 'get');
   },
 
   // #### `.has(attr)`

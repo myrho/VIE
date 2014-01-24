@@ -650,16 +650,31 @@ VIE.prototype.Findable.prototype = new VIE.prototype.Able();
 // The here-listed methods are utility methods for the day-to-day
 // VIE.js usage. All methods are within the static namespace ```VIE.Util```.
 VIE.Util = {
+  // flag to set if URIs shall not have angle brackets  
   urisWithoutAngleBrackets : true,
+  //uriPattern : /^[a-z][a-z\d\.\-+]*:.+/i,
   uriPattern : /^(https?|ftp):\/\/(((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?(((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?)(:\d*)?)(\/((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)?(\?((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[\uE000-\uF8FF]|\/|\?)*)?(\#((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?$/i,
   hasAngleBrackets: function(string) {
     return /^<(.*)>$/.test(string);
   },
+  // ### VIE.Util.removeAngleBrackets(string)
+  // Removes angle brackets at the beginning and end of the string if existent.
+  // **Parameters**:
+  // *{string}* **string, URI** with or without angle brackets
+  // **Returns**:
+  // *{string}* without angle brackets
   removeAngleBrackets: function(string) {
     if( VIE.Util.hasAngleBrackets(string) )
       return string.substring(1, string.length-1);
     return string;
   },
+  // ### VIE.Util.addAngleBrackets(string)
+  // Adds angle brackets at the beginning and end of the string if the global
+  // flag *urisWithoutAngleBrackets* is false.
+  // **Parameters**:
+  // *{string}* **string, URI** with or without angle brackets
+  // **Returns**:
+  // *{string}* with angle brackets if flag is set
   addAngleBrackets: function(string) {
     if( VIE.Util.urisWithoutAngleBrackets || VIE.Util.hasAngleBrackets(string) ) 
       return string;
@@ -1673,14 +1688,9 @@ VIE.prototype.Entity = Backbone.Model.extend({
     return VIE.Util.getFormSchema(this);
   },
 
-  // ### Getter, Has, Setter
-  // #### `.get(attr)`
-  // To be able to communicate to a VIE Entity you can use a simple get(property)
-  // command as in `entity.get('rdfs:label')` which will give you one or more literals.
-  // If the property points to a collection, its entities can be browsed further.
-  get: function (attr) {
+  _previousOrGet: function(attr, previousOrGet){
     attr = VIE.Util.mapAttributeNS(attr, this.vie.namespaces);
-    var value = Backbone.Model.prototype.get.call(this, attr);
+    var value = Backbone.Model.prototype[previousOrGet].call(this, attr);
 
     value = (_.isArray(value)) ? value : [ value ];
     if (value.length === 0) {
@@ -1710,6 +1720,19 @@ VIE.prototype.Entity = Backbone.Model.extend({
     // if there is only one element, just return that one
     value = (value.length === 1)? value[0] : value;
     return value;
+  },
+
+  previous: function(attr) {
+      return this._previousOrGet(attr, 'previous');
+  },
+
+  // ### Getter, Has, Setter
+  // #### `.get(attr)`
+  // To be able to communicate to a VIE Entity you can use a simple get(property)
+  // command as in `entity.get('rdfs:label')` which will give you one or more literals.
+  // If the property points to a collection, its entities can be browsed further.
+  get: function (attr) {
+      return this._previousOrGet(attr, 'get');
   },
 
   // #### `.has(attr)`
