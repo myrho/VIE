@@ -683,10 +683,13 @@ VIE.Util = {
   normalizeAngleBrackets: function(string) {
     return VIE.Util.addAngleBrackets(VIE.Util.removeAngleBrackets(string));
   },
+  isBlankNode: function(string) {
+    return string.substr(0, 7) === '_:bnode';
+  },
   isReference: function(uri){
     return VIE.Util.uriPattern.test(VIE.Util.removeAngleBrackets(uri));
   },
-
+  
   toReference: function(uri, ns) {
     if (_.isArray(uri)) {
       return _.map(uri, function(part) {
@@ -1958,7 +1961,7 @@ VIE.prototype.Entity = Backbone.Model.extend({
   },
 
   isNew: function() {
-    if (this.getSubjectUri().substr(0, 7) === '_:bnode') {
+    if (VIE.Util.isBlankNode(this.getSubjectUri())){
       return true;
     }
     return false;
@@ -2244,7 +2247,6 @@ VIE.prototype.Collection = Backbone.Collection.extend({
             });
             return entities;
         }
-
         if (model === undefined) {
             throw new Error("No model given");
         }

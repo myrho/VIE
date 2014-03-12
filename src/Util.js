@@ -44,10 +44,13 @@ VIE.Util = {
   normalizeAngleBrackets: function(string) {
     return VIE.Util.addAngleBrackets(VIE.Util.removeAngleBrackets(string));
   },
+  isBlankNode: function(string) {
+    return string.substr(0, 7) === '_:bnode';
+  },
   isReference: function(uri){
     return VIE.Util.uriPattern.test(VIE.Util.removeAngleBrackets(uri));
   },
-
+  
   toReference: function(uri, ns) {
     if (_.isArray(uri)) {
       return _.map(uri, function(part) {

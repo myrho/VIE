@@ -321,7 +321,7 @@ VIE.prototype.Entity = Backbone.Model.extend({
   },
 
   isNew: function() {
-    if (this.getSubjectUri().substr(0, 7) === '_:bnode') {
+    if (VIE.Util.isBlankNode(this.getSubjectUri())){
       return true;
     }
     return false;
